@@ -23,4 +23,7 @@ const port = process.env.PORT || 8000;
 require('./config')(app);
 require('./routes')(app);
 
-console.log('* Listening on port ' + port + ' *' );
+// Listen for requests
+app.listen(port, function() {
+  console.log('* Listening on port ' + port + ' *' );
+});

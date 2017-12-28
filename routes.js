@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = function(app) {
 
   // get method for root URL:/
   app.get('/', function (req, resp, next) {
