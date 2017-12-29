@@ -1,11 +1,18 @@
 <form action="/message" method="post">
   <input type="hidden" name="key" value={{key}}>
-  Key: {{key}}<br>
+  <input type="hidden" name="from_id" value={{from_id}}>
   <br>
   <b>Message text:</b>
-  <br><br>
+  <br>
+  <br>
   <textarea rows="2" cols="50" name="message" placeholder="Type your message here" required></textarea>
   <br>
   <br>
   <button type="submit" value="submit">Send</button>
+  <br>
+  <br>
+  {{#each message}}
+      <li>From: {{screen_name}} - {{message}}</li>
+      <br>
+  {{/each}}
 </form>
