@@ -8,8 +8,8 @@ CREATE TABLE users (
 
 CREATE TABLE messages (
 	id SERIAL NOT NULL PRIMARY KEY,
-	from_user INTEGER,
-	to_user INTEGER,
+	message_key VARCHAR,
 	message TEXT,
-	message_sent_datetime TIMESTAMP
+	datetime_sent TIMESTAMP,
+	users_id INTEGER REFERENCES users (id)
 );

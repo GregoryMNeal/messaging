@@ -5,11 +5,7 @@
 
 const express = require('express');
 const app = express();
-const pgp = require('pg-promise')({});
 const body_parser = require('body-parser');
-
-// Database setup
-const db = pgp(process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/messaging');
 
 // Application setup
 app.use(body_parser.urlencoded({extended: false}));
