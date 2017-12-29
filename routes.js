@@ -23,34 +23,53 @@ module.exports = function(app) {
 
   // post method for root URL:/
   app.post('/', function (req, resp, next) {
-    var from_id = req.body.from_id;
-    var to_id = req.body.to_id;
     // get conversation key
-    var q = 'SELECT * FROM conversations \
-    WHERE from_userid = $1 OR to_userid = $1 \
-    AND from_userid = $2 OR to_userid = $2';
-    db.any(q, from_id, to_id)
-
-    // assign a unique conversation key
-    var key = uuidv4();
-    var table_data = {
-      conversation_key: key,
+    var select_data = {
       from_id: req.body.from_id,
       to_id: req.body.to_id
     };
-    var q = 'INSERT INTO conversations \
-    VALUES (default, ${conversation_key}, ${from_id}, ${to_id})';
-    db.any(q, table_data)
-      .then(function () {
-        resp.redirect(url.format({
-          pathname: "/message",
-          query: {
-            "key": key,
-            "from": req.body.from_id
-          }
-        }));
+    var q = 'SELECT * FROM conversations \
+    WHERE from_userid = ${from_id} OR to_userid = ${from_id} \
+    AND from_userid = ${to_id} OR to_userid = ${to_id}';
+    db.any(q, select_data)
+      .then(function(results){
+        if(results.length !== 0) {
+          // get unique conversation key
+          var key = results[0].conversation_key;
+          resp.redirect(url.format({
+            pathname: "/message",
+            query: {
+              "key": key,
+              "from": req.body.from_id
+            }
+          }));
+        } else {
+          // assign unique conversation key
+          var key = uuidv4();
+          var table_data = {
+            conversation_key: key,
+            from_id: req.body.from_id,
+            to_id: req.body.to_id
+          };
+          var q = 'INSERT INTO conversations \
+          VALUES (default, ${conversation_key}, ${from_id}, ${to_id})';
+          db.any(q, table_data)
+            .then(function (r) {
+              console.log('results from conversation table', r);
+              resp.redirect(url.format({
+                pathname: "/message",
+                query: {
+                  "key": key,
+                  "from": req.body.from_id
+                }
+              }));
+            })
+            .catch(next);
+        }
       })
-      .catch(next);
+      .catch(function(e){
+        console.log(e);
+      });
   });
 
   // get method for messaging
