@@ -34,7 +34,7 @@ module.exports = function(app) {
     db.any(q, select_data)
       .then(function(results){
         if(results.length !== 0) {
-          // get unique conversation key
+          // continue an existing conversation
           var key = results[0].conversation_key;
           resp.redirect(url.format({
             pathname: "/message",
@@ -44,16 +44,16 @@ module.exports = function(app) {
             }
           }));
         } else {
-          // assign unique conversation key
+          // start a new conversation
           let key = uuidv4();
-          let table_data = {
+          let insert_data = {
             conversation_key: key,
             from_id: req.body.from_id,
             to_id: req.body.to_id
           };
           let q = 'INSERT INTO conversations \
           VALUES (default, ${conversation_key}, ${from_id}, ${to_id})';
-          db.any(q, table_data)
+          db.any(q, insert_data)
             .then(function (r) {
               console.log('results from conversation table', r);
               resp.redirect(url.format({
@@ -97,7 +97,7 @@ module.exports = function(app) {
   app.post('/message', function (req, resp, next) {
     let key = req.body.key;
     let now = moment();
-    let table_data = {
+    let insert_data = {
       conversation_key: key,
       message: req.body.message,
       datetime_sent: now,
@@ -105,7 +105,7 @@ module.exports = function(app) {
     };
     let q = 'INSERT INTO messages \
     VALUES (default, ${conversation_key}, ${message}, ${datetime_sent}, ${sent_by})';
-    db.any(q, table_data)
+    db.any(q, insert_data)
       .then(function () {
         resp.redirect(url.format({
           pathname: "/message",
