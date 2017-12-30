@@ -18,5 +18,6 @@ CREATE TABLE messages (
 	conversation_key VARCHAR,
 	message TEXT,
 	datetime_sent TIMESTAMP,
+	datetime_read TIMESTAMP DEFAULT NULL,
 	sent_by INTEGER REFERENCES users (id)
 );

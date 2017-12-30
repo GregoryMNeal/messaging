@@ -1,0 +1,11 @@
+<form>
+  <input type="hidden" name="from_id" value={{from_id}}>
+  <br>
+  <b>Conversations:</b>
+  <br>
+  <br>
+  {{#each conversation}}
+      <li>To: {{name}}</li>
+      <br>
+  {{/each}}
+</form>

@@ -13,7 +13,7 @@ const moment = require('moment');
 
 module.exports = function(app) {
 
-  // get method for root URL:/
+  // get method for prompting for the from user id
   app.get('/prompt', function (req, resp, next) {
     let context = {
       title: 'Messaging App'
@@ -21,8 +21,44 @@ module.exports = function(app) {
     resp.render('prompt.hbs', context);
   });
 
+  // get method for prompting for the to user id
+  app.get('/new', function (req, resp, next) {
+    let from_id = req.query.from_id;
+    let q = 'SELECT * FROM users \
+    WHERE id = $1';
+    db.any(q, from_id)
+      .then(function (results) {
+        let from_name = results[0].name;
+        let context = {
+          title: 'New Message',
+          from_id: from_id,
+          from_name: from_name
+        };
+        resp.render('new.hbs', context);
+      })
+      .catch(next);
+  });
+
+  // get method for a list of conversations
+  app.get('/conversations', function (req, resp, next) {
+    let from_id = req.query.from_id;
+    let q = 'SELECT * FROM conversations \
+    LEFT JOIN users ON users.id = conversations.to_userid \
+    WHERE from_userid = $1';
+    db.any(q, from_id)
+      .then(function (results) {
+        let context = {
+          title: 'Conversations',
+          from_id: from_id,
+          conversation: results
+        };
+        resp.render('conversations.hbs', context);
+      })
+      .catch(next);
+  });
+
   // post method for root URL:/
-  app.post('/prompt', function (req, resp, next) {
+  app.post('/new', function (req, resp, next) {
     // get conversation key
     let select_data = {
       from_id: req.body.from_id,
@@ -54,8 +90,7 @@ module.exports = function(app) {
           let q = 'INSERT INTO conversations \
           VALUES (default, ${conversation_key}, ${from_id}, ${to_id})';
           db.any(q, insert_data)
-            .then(function (r) {
-              console.log('results from conversation table', r);
+            .then(function () {
               resp.redirect(url.format({
                 pathname: "/message",
                 query: {
@@ -104,7 +139,7 @@ module.exports = function(app) {
       sent_by: req.body.from_id
     };
     let q = 'INSERT INTO messages \
-    VALUES (default, ${conversation_key}, ${message}, ${datetime_sent}, ${sent_by})';
+    VALUES (default, ${conversation_key}, ${message}, ${datetime_sent}, NULL, ${sent_by})';
     db.any(q, insert_data)
       .then(function () {
         resp.redirect(url.format({
