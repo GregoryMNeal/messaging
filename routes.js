@@ -26,7 +26,7 @@ module.exports = function(app) {
     let from_id = req.query.from_id;
     let q = 'SELECT * FROM conversations \
     LEFT JOIN users ON users.id = conversations.to_userid \
-    WHERE from_userid = $1';
+    WHERE from_userid = $1 OR to_userid = $1';
     db.any(q, from_id)
       .then(function (results) {
         let context = {
@@ -59,14 +59,16 @@ module.exports = function(app) {
 
   // post method for intiating a new message
   app.post('/new', function (req, resp, next) {
+    console.log('From ID: ' + req.body.from_id);
+    console.log('To ID: ' + req.body.to_id);
     // get conversation key
     let select_data = {
       from_id: req.body.from_id,
       to_id: req.body.to_id
     };
     let q = 'SELECT * FROM conversations \
-    WHERE from_userid = ${from_id} OR to_userid = ${from_id} \
-    AND from_userid = ${to_id} OR to_userid = ${to_id}';
+    WHERE from_userid = ${from_id} AND to_userid = ${to_id} \
+    OR from_userid = ${to_id} AND to_userid = ${from_id}';
     db.any(q, select_data)
       .then(function(results){
         if(results.length !== 0) {

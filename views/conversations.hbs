@@ -8,7 +8,7 @@
   <br>
   <br>
   {{#each conversation}}
-      <li>To: {{name}}</li>
+      <li><a href="/message?key={{conversation_key}}&from_id={{from_userid}}">To: {{name}}</li>
       <br>
   {{/each}}
 </form>
