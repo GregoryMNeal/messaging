@@ -21,25 +21,7 @@ module.exports = function(app) {
     resp.render('prompt.hbs', context);
   });
 
-  // get method for prompting for the to user id
-  app.get('/new', function (req, resp, next) {
-    let from_id = req.query.from_id;
-    let q = 'SELECT * FROM users \
-    WHERE id = $1';
-    db.any(q, from_id)
-      .then(function (results) {
-        let from_name = results[0].name;
-        let context = {
-          title: 'New Message',
-          from_id: from_id,
-          from_name: from_name
-        };
-        resp.render('new.hbs', context);
-      })
-      .catch(next);
-  });
-
-  // get method for a list of conversations
+  // get method for displaying a list of conversations
   app.get('/conversations', function (req, resp, next) {
     let from_id = req.query.from_id;
     let q = 'SELECT * FROM conversations \
@@ -57,7 +39,25 @@ module.exports = function(app) {
       .catch(next);
   });
 
-  // post method for root URL:/
+  // get method for intiating a new message
+  app.get('/new', function (req, resp, next) {
+    let from_id = req.query.from_id;
+    let q = 'SELECT * FROM users \
+    WHERE id = $1';
+    db.any(q, from_id)
+      .then(function (results) {
+        let from_name = results[0].name;
+        let context = {
+          title: 'New Message',
+          from_id: from_id,
+          from_name: from_name
+        };
+        resp.render('new.hbs', context);
+      })
+      .catch(next);
+  });
+
+  // post method for intiating a new message
   app.post('/new', function (req, resp, next) {
     // get conversation key
     let select_data = {
@@ -107,7 +107,7 @@ module.exports = function(app) {
       });
   });
 
-  // get method for messaging
+  // get method for sending messages
   app.get('/message', function (req, resp, next) {
     let key = req.query.key;
     let from_id = req.query.from;
@@ -128,7 +128,7 @@ module.exports = function(app) {
       .catch(next);
   });
 
-  // post method for messaging
+  // post method for sending messages
   app.post('/message', function (req, resp, next) {
     let key = req.body.key;
     let now = moment();
