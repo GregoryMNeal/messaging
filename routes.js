@@ -24,11 +24,23 @@ module.exports = function(app) {
   // get method for displaying a list of conversations
   app.get('/conversations', function (req, resp, next) {
     let from_id = req.query.from_id;
-    let q = 'SELECT * FROM conversations \
-    LEFT JOIN users ON users.id = conversations.to_userid \
-    WHERE from_userid = $1 OR to_userid = $1';
+    let q = 'SELECT conversation_key, from_userid, \
+    from_user.screen_name AS from_screen_name, \
+    to_user.screen_name AS to_screen_name FROM conversations \
+    JOIN users AS from_user ON from_userid = from_user.userid \
+    JOIN users AS to_user ON to_userid = to_user.userid \
+    WHERE from_userid = $1 OR to_userid = $1 AND last_message != NULL \
+    ORDER BY last_message DESC';
     db.any(q, from_id)
       .then(function (results) {
+        for (var i = 0; i < results.length; i++) {
+          if (results[i].from_userid == from_id) {
+            results[i].screen_name = results[i].to_screen_name;
+          } else {
+            results[i].screen_name = results[i].from_screen_name;
+          }
+          results[i].from_id = from_id;
+        }
         let context = {
           title: 'Conversations',
           from_id: from_id,
@@ -43,24 +55,22 @@ module.exports = function(app) {
   app.get('/new', function (req, resp, next) {
     let from_id = req.query.from_id;
     let q = 'SELECT * FROM users \
-    WHERE id = $1';
+    WHERE userid = $1';
     db.any(q, from_id)
       .then(function (results) {
-        let from_name = results[0].name;
+        let screen_name = results[0].screen_name;
         let context = {
           title: 'New Message',
           from_id: from_id,
-          from_name: from_name
+          screen_name: screen_name
         };
         resp.render('new.hbs', context);
       })
       .catch(next);
   });
 
-  // post method for intiating a new message
+  // post method for initiating a new message
   app.post('/new', function (req, resp, next) {
-    console.log('From ID: ' + req.body.from_id);
-    console.log('To ID: ' + req.body.to_id);
     // get conversation key
     let select_data = {
       from_id: req.body.from_id,
@@ -87,7 +97,7 @@ module.exports = function(app) {
           let insert_data = {
             conversation_key: key,
             from_id: req.body.from_id,
-            to_id: req.body.to_id
+            to_id: req.body.to_id,
           };
           let q = 'INSERT INTO conversations \
           VALUES (default, ${conversation_key}, ${from_id}, ${to_id})';
@@ -114,7 +124,7 @@ module.exports = function(app) {
     let key = req.query.key;
     let from_id = req.query.from;
     let q = 'SELECT * FROM messages \
-    LEFT JOIN users ON users.id = messages.sent_by \
+    LEFT JOIN users ON users.userid = messages.sent_by \
     WHERE conversation_key = $1 \
     ORDER BY datetime_sent DESC';
     db.any(q, key)
@@ -144,13 +154,23 @@ module.exports = function(app) {
     VALUES (default, ${conversation_key}, ${message}, ${datetime_sent}, NULL, ${sent_by})';
     db.any(q, insert_data)
       .then(function () {
-        resp.redirect(url.format({
-          pathname: "/message",
-          query: {
-            "key": key,
-            "from": req.body.from_id
-          }
-        }));
+        // update conversation with date/time of latest message
+        let update_data = {
+          now: now,
+          key: key
+        };
+        let q = 'UPDATE conversations SET last_message = ${now} WHERE conversation_key = ${key}';
+        db.any(q, update_data)
+          .then(function () {
+            resp.redirect(url.format({
+              pathname: "/message",
+              query: {
+                "key": key,
+                "from": req.body.from_id
+              }
+            }));
+          })
+          .catch(next);
       })
       .catch(next);
   });

@@ -7,8 +7,10 @@
   <input type="submit" formaction="/new" formmethod="get" value="New Message">
   <br>
   <br>
-  {{#each conversation}}
-      <li><a href="/message?key={{conversation_key}}&from_id={{from_userid}}">To: {{name}}</li>
-      <br>
-  {{/each}}
+  <ul>
+    {{#each conversation}}
+        <li><a href="/message?key={{conversation_key}}&from_id={{from_id}}">{{screen_name}}</li>
+        <br>
+    {{/each}}
+  </ul>
 </form>

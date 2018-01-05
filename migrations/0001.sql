@@ -1,16 +1,19 @@
-CREATE TABLE users (
-	id SERIAL NOT NULL PRIMARY KEY,
-	name VARCHAR,
-	email VARCHAR,
-	screen_name VARCHAR,
-	active BOOLEAN DEFAULT true
+CREATE TABLE "users" (
+    "userid" bigint PRIMARY KEY,
+    "token" text,
+    "first_name" text,
+    "last_name" text,
+    "screen_name" text UNIQUE,
+    "email" text,
+    "picture" text
 );
 
 CREATE TABLE conversations (
 	id SERIAL NOT NULL PRIMARY KEY,
 	conversation_key VARCHAR,
-	from_userid INTEGER,
-	to_userid INTEGER
+	from_userid BIGINT,
+	to_userid BIGINT,
+  last_message TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE messages (
@@ -19,5 +22,5 @@ CREATE TABLE messages (
 	message TEXT,
 	datetime_sent TIMESTAMP,
 	datetime_read TIMESTAMP DEFAULT NULL,
-	sent_by INTEGER REFERENCES users (id)
+	sent_by BIGINT REFERENCES users (userid)
 );
